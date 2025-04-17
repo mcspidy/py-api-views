@@ -1,8 +1,6 @@
 from rest_framework.decorators import api_view
-from rest_framework import generics, mixins
+from rest_framework import generics, mixins, status
 from rest_framework.response import Response
-from rest_framework import status
-
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
@@ -10,16 +8,19 @@ from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from cinema.models import (
     Movie,
     Genre,
-    Actor, CinemaHall
+    Actor,
+    CinemaHall
 )
 from cinema.serializers import (
     MovieSerializer,
     GenreSerializer,
-    ActorSerializer, CinemaHallSerializer
+    ActorSerializer,
+    CinemaHallSerializer
 )
 
 
 class GenreList(APIView):
+
     @staticmethod
     def get(request):
         genres = Genre.objects.all()
@@ -29,9 +30,10 @@ class GenreList(APIView):
     @staticmethod
     def post(request):
         serializer = GenreSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GenreDetail(APIView):
@@ -46,9 +48,10 @@ class GenreDetail(APIView):
 
     def put(self, request, pk):
         serializer = GenreSerializer(self.get_object(pk=pk), data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self, request, pk):
         serializer = GenreSerializer(
@@ -56,9 +59,10 @@ class GenreDetail(APIView):
             data=request.data,
             partial=True
         )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
         self.get_object(pk=pk).delete()
